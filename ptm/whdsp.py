@@ -2,6 +2,8 @@ import numpy as np
 import time
 from scipy.special import gammaln, psi
 
+import os
+
 # epsilon
 eps = 1e-100
 
@@ -71,7 +73,7 @@ class hdsp:
             if iter > 0:
                 lbs.append(lb)
                 if self.is_plot:
-                    plt.close
+                    plt.close()
                     plt.plot(lbs)
                     plt.draw()
 
@@ -97,7 +99,6 @@ class hdsp:
 
     # update per word v.d. phi (c denoted by z in the icml paper)
     def update_C(self, corpus):
-
         corpus.phi_doc = np.zeros([corpus.M, self.K])
         psiGamma = psi(self.gamma)
         gammaSum = np.sum(self.gamma, 0)
@@ -275,19 +276,19 @@ class hdsp:
 
             psiV = psi(self.beta * p)
 
-            vVec = - self.beta * stickLeft * sum_r_w + self.beta * stickLeft * sumLnZ - corpus.M * self.beta * stickLeft * psiV;
+            vVec = - self.beta * stickLeft * sum_r_w + self.beta * stickLeft * sumLnZ - corpus.M * self.beta * stickLeft * psiV
 
             for k in xrange(self.K):
-                tmp1 = self.beta * sum(sum_r_w[k + 1:] * p[k + 1:] / one_V[k]);
-                tmp2 = self.beta * sum(sumLnZ[k + 1:] * p[k + 1:] / one_V[k]);
-                tmp3 = corpus.M * self.beta * sum(psiV[k + 1:] * p[k + 1:] / one_V[k]);
-                vVec[k] = vVec[k] + tmp1 - tmp2;
-                vVec[k] = vVec[k] + tmp3;
+                tmp1 = self.beta * sum(sum_r_w[k + 1:] * p[k + 1:] / one_V[k])
+                tmp2 = self.beta * sum(sumLnZ[k + 1:] * p[k + 1:] / one_V[k])
+                tmp3 = corpus.M * self.beta * sum(psiV[k + 1:] * p[k + 1:] / one_V[k])
+                vVec[k] = vVec[k] + tmp1 - tmp2
+                vVec[k] = vVec[k] + tmp3
                 vVec[k] = vVec[k]
-            vVec[:self.K - 2] -= (self.alpha - 1) / one_V[:self.K - 2];
-            vVec[self.K - 1] = 0;
-            step_stick = self.getstepSTICK(self.V, vVec, sum_r_w, sumLnZ, self.beta, self.alpha, corpus.M);
-            self.V = self.V + step_stick * vVec;
+            vVec[:self.K - 2] -= (self.alpha - 1) / one_V[:self.K - 2]
+            vVec[self.K - 1] = 0
+            step_stick = self.getstepSTICK(self.V, vVec, sum_r_w, sumLnZ, self.beta, self.alpha, corpus.M)
+            self.V = self.V + step_stick * vVec
             self.p = self.getP(self.V)
 
         lb += self.K * gammaln(self.alpha + 1) - self.K * gammaln(self.alpha) + np.sum(
@@ -352,14 +353,14 @@ class hdsp:
         max_step = min([min_zero, min_one])
 
         if max_step > 0:
-            step_check_vec = np.array([.01, .125, .25, .375, .5, .625, .75, .875]) * max_step;
+            step_check_vec = np.array([.01, .125, .25, .375, .5, .625, .75, .875]) * max_step
         else:
-            step_check_vec = list();
+            step_check_vec = list()
 
-        f = np.zeros(len(step_check_vec));
+        f = np.zeros(len(step_check_vec))
         for ite in xrange(len(step_check_vec)):
-            step_check = step_check_vec[ite];
-            vec_check = curr + step_check * grad;
+            step_check = step_check_vec[ite]
+            vec_check = curr + step_check * grad
             p = self.getP(vec_check)
             f[ite] = -np.sum(beta * p * sumMu) - M * np.sum(gammaln(beta * p)) + np.sum((beta * p - 1) * sumlnZ) + (
                                                                                                                    alpha - 1.) * np.sum(
@@ -369,15 +370,15 @@ class hdsp:
             b = f.argsort()[-1]
             step = step_check_vec[b]
         else:
-            step = 0;
+            step = 0
 
         if b == 0:
-            rho = .5;
-            bool = 1;
-            fold = f[b];
+            rho = .5
+            bool = 1
+            fold = f[b]
             while bool:
-                step = rho * step;
-                vec_check = curr + step * grad;
+                step = rho * step
+                vec_check = curr + step * grad
                 tmp = np.zeros(vec_check.size)
                 tmp[1:] = vec_check[:-1]
                 p = vec_check * np.cumprod(1 - tmp)
@@ -432,7 +433,7 @@ class hdsp:
                 f.write('\n')
 
     def save_result(self, folder, corpus):
-        import os, cPickle
+
         if not os.path.exists(folder):
             os.mkdir(folder)
         np.savetxt(folder + '/final_w.csv', corpus.w, delimiter=',')
@@ -442,7 +443,6 @@ class hdsp:
         np.savetxt(folder + '/B.csv', corpus.B, delimiter=',')
         self.write_top_words(corpus, folder)
         self.write_label_top_words(corpus, folder)
-        # cPickle.dump([self,corpus], open(folder+'/model_corpus.pkl','w'))
 
     def heldout_perplexity(self, corpus):
         num_hdoc = len(corpus.heldout_ids)
@@ -489,7 +489,7 @@ class hdsp_corpus:
                 tmp_cnt.append(np.array(cnt))
             word_ids = tmp_ids
             word_cnt = tmp_cnt
-        if label_names == None:
+        if label_names is None:
             label_names = [str(i) for i in xrange(labels.shape[1])]
 
         self.word_ids = word_ids
@@ -531,7 +531,7 @@ def plot_expected_topics(model, corpus, labels, save_path=None, num_words=10, nu
 
     wr = np.exp(np.dot(labels, corpus.w))
 
-    Z = model.p / (wr)
+    Z = model.p / wr
     Z /= np.sum(Z)  # expected topic proportion given 'labels'
 
     rank = model.p.argsort()[::-1]
